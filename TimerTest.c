@@ -20,6 +20,9 @@ void setup() {
 
 	// enable Timer1 overflow interrupt:
 	TIMSK1 |= (1 << TOIE1);
+	//enable Timer1 compare A interrupt
+	TIMSK1 |= (1 << OCIE1A);
+	
 	// Pre-load with value 44702
 	//use 64886 for 100Hz
 	//use 64286 for 50 Hz

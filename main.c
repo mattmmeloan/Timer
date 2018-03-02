@@ -10,7 +10,7 @@
 #include "TimerTest.h"
 
 ISR(TIMER1_COMPA_vect) {
-	//PORTB ^= 0x80; // turn off light after 75ms
+	PORTB ^= 0x80; // turn off light after 75ms
 }
 
 ISR(TIMER1_OVF_vect) {
@@ -22,7 +22,7 @@ int main(void)
 {
     setup();
 	DDRB = 0x80;
-	PORTB = 0x00;
+	PORTB = 0x80;
 	
 	/* Replace with your application code */
     while (1) {
