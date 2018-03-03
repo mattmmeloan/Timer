@@ -8,35 +8,40 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
+/* ONTIME is 75ms; PERIOD is ~333.3ms; 
+   START is Timer register 1's TOP value - PERIOD */
+#define ONTIME  1171
+#define PERIOD  5208
+#define START   (65535 - PERIOD)
 
+#define OUTPUT_PIN  (1 << PINB7)
+#define PRE_SCALING ((1 << CS12) | (1 << CS10)) // clk/1024
 
+/* initialize timer 1 for normal mode 
+ */
 void setup() {
-	// initialize Timer1
-	cli();         // disable global interrupts
-	
-	
+	cli();         // disable global interrupts	
 	TCCR1A = 0;    // set entire TCCR1A register to 0
 	TCCR1B = 0;    // set entire TCCR1A register to 0
 
-	// enable Timer1 overflow interrupt:
-	TIMSK1 |= (1 << TOIE1);
-	//enable Timer1 compare A interrupt
-	TIMSK1 |= (1 << OCIE1A);
+	TIMSK1 |= (1 << TOIE1);		// enable Timer1 overflow interrupt
+	TIMSK1 |= (1 << OCIE1A);	// enable Timer1 compare A interrupt
 	
-	// Pre-load with value 44702
-	//use 64886 for 100Hz
-	//use 64286 for 50 Hz
-	//use 44702 for 3 Hz?
-	//use 34286 for 2 Hz
-	TCNT1=0xAE9E;
-	TCCR1B |= (1 << CS12); // Sets bit CS12 in TCCR1B, prescaling at 256
-	// This is achieved by shifting binary 1 (0b00000001)
+	TCNT1 = START;
+	TCCR1B |= PRE_SCALING;
 	
-	//set up match
-	//4788 cycles after timer start
-	//roughly 75ms
-	OCR1A = 0xC0EE;
+	OCR1A = START + ONTIME;		//set up match for 75ms after start value
+	DDRB |= OUTPUT_PIN;
+	PORTB |= OUTPUT_PIN;		// LED starts on
+	
+	sei(); // enable global interrupts
+}
 
-	// enable global interrupts
-	sei();
+ISR(TIMER1_COMPA_vect) {
+	PORTB ^= OUTPUT_PIN; // turn off light after 75ms
+}
+
+ISR(TIMER1_OVF_vect) {
+	PORTB ^= OUTPUT_PIN; // turn on light again
+	TCNT1 = START;		 // reload the timer
 }
